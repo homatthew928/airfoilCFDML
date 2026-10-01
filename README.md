@@ -61,42 +61,53 @@ The resulting geometry generation and meshing tool requires only the geometry pa
 
 ### CFD Setup
 
-OpenFOAM v2412 was used to perform CFD simulations. Fully turbulent RANS simulations were performed under steady-state, incompressible, 2D conditions, using a $k-\omega$ SST turbulence model. At a freestream flow speed of Mach ($Ma$) 0.15, compressibility effects are sufficiently small for an incompressible flow assumption to be appropriate. At a Reynolds number of $6 \times 10^6$, a fully turbulent assumption was adopted. The maximum $AoA$ was limited to $8 ^\circ$ to reduce the likelihood of strongly separated and unsteady flows, supporting the use of steady-state simulations within the design space. These assumptions, together with the 2D approximation, allow aerodynamic performance of airfoils to be evaluated while keeping computational costs of generating the CFD datasets manageable within the available resource constraints.
+OpenFOAM v2412 was used to perform CFD simulations. Fully turbulent RANS simulations were performed under steady-state, incompressible, 2D conditions, using a $k-\omega$ SST turbulence model. At a freestream flow speed of Mach ($Ma$) 0.15, compressibility effects are sufficiently small for an incompressible flow assumption to be appropriate. At a Reynolds number of $6 \times 10^6$, a fully turbulent assumption was adopted. The maximum $AoA$ was limited to $8^\circ$ to reduce the likelihood of strongly separated and unsteady flows, supporting the use of steady-state simulations within the design space. These assumptions, together with the 2D approximation, allow aerodynamic performance of airfoils to be evaluated while keeping computational costs of generating the CFD datasets manageable within the available resource constraints.
 
-With temperature $T = 300\ K$, heat capacity ratio $\gamma = 1.4$, and specific gas constant $R = 287\ J\,kg^{-1}K^{-1}$, speed of sound ($c$) was evaluated by
-$$
+With temperature $T = 300\ K$, heat capacity ratio $\gamma = 1.4$, and specific gas constant $R = 287\ J kg^{-1} K^{-1}$, speed of sound ($c$) was evaluated by
+
+```math
 c = \sqrt{\gamma R T} = 347.19\ m\,s^{-1}.
-$$
-At Mach 0.15, flow speed ($U$) was
-$$
-U = Ma \times c = 52.0783\ m\,s^{-1}.
-$$
-Since all airfoils generated had a chord length ($L$) of $1\ m$ and simulations were conducted at Reynolds number $6 \times 10^6$, kinematic viscosity ($\nu$) was calculated using
-$$
-Re = \frac{UL}{\nu},
-$$
-resulting in
-$$
-\nu = 8.67972 \times 10^{-6}\ m^2\,s^{-1}.
-$$
-Freestream turbulence conditions were derived from [NASA Turbulence Modeling Resource (TMR) NACA 0012 SST validation case](https://tmbwg.github.io/turbmodels/naca0012_val_sst.html), using a turbulence intensity ($I$) of 0.052% and a turbulent-to-laminar viscosity ratio ($\nu_t/\nu$) of 0.009 to evaluate the freestream turbulent kinetic energy ($k$) and specific dissipation rate ($\omega$). As a result,
-$$
-k = \frac{3}{2} (UI)^2 = 1.10005 \times 10^{-3}\ m^2\,s^{-2}
-$$
-and
-$$
-\omega  = \frac{k}{\frac{\nu_t}{\nu} \nu} = 1.40820 \times 10^4\ s^{-1}.
-$$
+```
 
-In the `simpleFoam` setup, farfield boundary conditions for $U$ and pressure ($p$) were `freestream` and `freestreamPressure`, while $k$ and $\omega$ used `inletOutlet` farfield boundary conditions to represent freestream flow conditions. Turbulent kinematic viscosity ($\nu_t$) used a `calculated` farfield boundary condition, as it is determined by the turbulence model. At the airfoil surface, `noSlip` and `zeroGradient` conditions were applied to $U$ and $p$, while `kqRWallFunction`, `omegaWallFunction`, and `nutLowReWallFunction` were used for the turbulence quantities. These conditions support the low-$y^+$ near-wall treatment used with the $k-\omega$ SST model.
+At Mach 0.15, flow speed ($U$) was
+
+```math
+U = Ma \times c = 52.0783\ m\,s^{-1}.
+```
+
+Since all airfoils generated had a chord length ($L$) of $1\ m$ and simulations were conducted at Reynolds number $6 \times 10^6$, kinematic viscosity ($\nu$) was calculated using
+
+```math
+Re = \frac{UL}{\nu},
+```
+
+resulting in
+
+```math
+\nu = 8.67972 \times 10^{-6}\ m^2\,s^{-1}.
+```
+
+Freestream turbulence conditions were derived from [NASA Turbulence Modeling Resource (TMR) NACA 0012 SST validation case](https://tmbwg.github.io/turbmodels/naca0012_val_sst.html), using a turbulence intensity ($I$) of 0.052% and a turbulent-to-laminar viscosity ratio ($\frac{\nu_t}{\nu}$) of 0.009 to evaluate the freestream turbulent kinetic energy ($k$) and specific dissipation rate ($\omega$). As a result,
+
+```math
+k = \frac{3}{2} (UI)^2 = 1.10005 \times 10^{-3}\ m^2\,s^{-2}
+```
+
+and
+
+```math
+\omega  = \frac{k}{\frac{\nu_t}{\nu} \nu} = 1.40820 \times 10^4\ s^{-1}.
+```
+
+In the `simpleFoam` setup, farfield boundary conditions for $U$ and pressure ($p$) were `freestream` and `freestreamPressure`, while $k$ and $\omega$ used `inletOutlet` farfield boundary conditions to represent freestream flow conditions. Turbulent kinematic viscosity ($\nu_t$) used a `calculated` farfield boundary condition, as it is determined by the turbulence model. At the airfoil surface, `noSlip` and `zeroGradient` conditions were applied to $U$ and $p$, while `kqRWallFunction`, `omegaWallFunction`, and `nutLowReWallFunction` were used for the turbulence quantities. These conditions support the low $y^+$ near-wall treatment used with the $k-\omega$ SST model.
 
 To assess iterative convergence, tolerances of $1 \times 10^{-6}$ and $1 \times 10^{-5}$ were applied to $C_D$ and $C_L$, respectively, over a 200-iteration window. Residuals of $U$ and $p$ were also monitored, with a convergence tolerance of $1 \times 10^{-4}$. All convergence criteria were required to be satisfied before the simulation was stopped.
 
 ### Mesh Convergence
 
-A mesh convergence study was performed to assess the sensitivity of aerodynamic coefficients to spatial discretisation. The study was performed on a NACA 0012 airfoil at an $AoA$ of $10.12 ^\circ$, and the resulting $C_D$ and $C_L$ values were plotted against the number of cells. A monotonic decrease in $C_D$ was observed, with a percentage decrease of 3.78% between refinement levels 3 and 4, as shown in Table 1 and Figure 1.
+A mesh convergence study was performed to assess the sensitivity of aerodynamic coefficients to spatial discretisation. The study was performed on a NACA 0012 airfoil at an $AoA$ of $10.12^\circ$, and the resulting $C_D$ and $C_L$ values were plotted against the number of cells. A monotonic decrease in $C_D$ was observed, with a percentage decrease of 3.78% between refinement levels 3 and 4, as shown in Table 1 and Figure 1.
 
-*Table 1: Mesh convergence results based on $C_D$.*
+Table 1: Mesh convergence results based on $C_D$.
 | Refinement Level | Number of Cells | $C_D$ | Change in $C_D$ (%) | Time (s) | Change in Time (%)|
 |---|---:|---:|---:|---:|---:|
 | 1 | 17,852 | 0.016795 | — | 103 | — |
@@ -106,11 +117,11 @@ A mesh convergence study was performed to assess the sensitivity of aerodynamic 
 
 ![Mesh convergence of drag coefficient](images/CdMeshConvergence.png)
 
-*Figure 1: Mesh convergence of $C_D$ with increasing cell count.*
+Figure 1: Mesh convergence of $C_D$ with increasing cell count.
 
 From Figure 2, $C_L$ showed an oscillatory response to mesh refinement with a maximum percentage change of only 0.78%. The magnitude of the percentage change decreased monotonically with mesh refinement, reaching 0.20% between refinement levels 3 and 4, as shown in Table 2. $C_L$ was therefore considered to have converged and was considerably less sensitive to mesh refinement than $C_D$.
 
-*Table 2: Mesh convergence results based on $C_L$.*
+Table 2: Mesh convergence results based on $C_L$.
 | Refinement Level | Number of Cells | $C_L$ | Change in $C_L$ (%) |
 |---|---:|---:|---:|
 | 1 | 17,852 | 1.08123 | — |
@@ -120,7 +131,7 @@ From Figure 2, $C_L$ showed an oscillatory response to mesh refinement with a ma
 
 ![Mesh convergence of lift coefficient](images/ClMeshConvergence.png)
 
-*Figure 2: Mesh convergence of $C_L$ with increasing cell count.*
+Figure 2: Mesh convergence of $C_L$ with increasing cell count.
 
 To choose between refinement levels 3 and 4, further investigation was required to assess the additional computational cost associated with increasing mesh refinement and the effect of further mesh refinement on CFD predictions. As a result, an AoA-swept validation study against experimental data was performed at both discretisation levels.
 
@@ -130,7 +141,7 @@ Experimental data for the NACA 0012 airfoil were obtained from the [NASA TMR](ht
 
 From Table 3, the average $C_D$ error at refinement level 3 was 7.42%, while the maximum error reached 14%. Since $C_D$ was predominantly overestimated, as shown in Figure 3, a maximum drag constraint would tend to produce conservative feasibility filtering.
 
-*Table 3: Validation results for $C_D$ at refinement level 3.*
+Table 3: Validation results for $C_D$ at refinement level 3.
 | $AoA$ | CFD | Experimental | Absolute Error | Relative Error (%) |
 |---:|---:|---:|---:|---:|
 | -0.05 | 0.00807548 | 0.00809 | $1.45 \times 10^{-5}$ | 0.18 |
@@ -140,13 +151,13 @@ From Table 3, the average $C_D$ error at refinement level 3 was 7.42%, while the
 | 8.3 | 0.0116125 | 0.0105 | $1.11 \times 10^{-3}$ | 10.6 |
 | 10.12 | 0.0136913 | 0.01201 | $1.68 \times 10^{-3}$ | 14 |
 
-![$C_D$ against $AoA$ at refinement level 3](images/CdVsAoA.png)
+![Cd against AoA at refinement level 3](images/CdVsAoA.png)
 
-*Figure 3: $C_D$ against $AoA$ at refinement level 3.*
+Figure 3: $C_D$ against $AoA$ at refinement level 3.
 
-Given that $C_L$ for a symmetric airfoil tends to zero as $AoA$ approaches $0 ^\circ$, relative error becomes highly sensitive to small absolute differences. The data point at $-0.05 ^\circ$ $AoA$ was therefore excluded when calculating the average percentage error. With this omission, the average $C_L$ error was 2.34%. Data on all test points can be found in Table 4 and Figure 4.
+Given that $C_L$ for a symmetric airfoil tends to zero as $AoA$ approaches $0^\circ$, relative error becomes highly sensitive to small absolute differences. The data point at $-0.05^\circ$ $AoA$ was therefore excluded when calculating the average percentage error. With this omission, the average $C_L$ error was 2.34%. Data on all test points can be found in Table 4 and Figure 4.
 
-*Table 4: Validation results for $C_L$ at refinement level 3.*
+Table 4: Validation results for $C_L$ at refinement level 3.
 | $AoA$ | CFD | Experimental | Absolute Error | Relative Error (%) |
 |---:|---:|---:|---:|---:|
 | -0.05 | -0.0039854 | -0.0126 | $8.61 \times 10^{-3}$ | 68.37 |
@@ -156,13 +167,13 @@ Given that $C_L$ for a symmetric airfoil tends to zero as $AoA$ approaches $0 ^\
 | 8.3 | 0.89898 | 0.8873 | $1.17 \times 10^{-2}$ | 1.32 |
 | 10.12 | 1.08492 | 1.0707 | $1.42 \times 10^{-2}$ | 1.33 |
 
-![$C_L$ against $AoA$ at refinement level 3](images/ClVsAoA.png)
+![Cl against AoA at refinement level 3](images/ClVsAoA.png)
 
-*Figure 4: $C_L$ against $AoA$ at refinement level 3.*
+Figure 4: $C_L$ against $AoA$ at refinement level 3.
 
 As a result, the mesh at refinement level 3 was considered sufficiently accurate for the purpose of this project. From Table 5, the mesh at refinement level 4 showed a 1.6 percentage-point reduction in average $C_D$ error and a 0.19 percentage-point reduction in average $C_L$ error, while total run time increased by 141.56%. Due to limited computational resources, refinement level 3 was selected for subsequent CFD dataset generation.
 
-*Table 5: Validation results comparison between refinement levels 3 and 4.*
+Table 5: Validation results comparison between refinement levels 3 and 4.
 | Refinement Level | Average $C_D$ Error (%) | Change in $C_D$ Error (percentage points) | Average $C_L$ Error (%) | Change in $C_L$ Error (percentage points) | Total Run Time (s) | Change in Run Time (%) |
 |---|---:|---:|---:|---:|---:|---:|
 | 3 | 7.42 | — | 2.34 | — | 729 | — |
@@ -176,15 +187,15 @@ In total, this sampling strategy generated 300 training configurations. For each
 
 Table 6 shows the variable parameter bounds used to define the design space. They were selected to cover the range represented by readily available NACA 4-digit airfoil geometries.
 
-*Table 6: Range of variable parameters.*
+Table 6: Range of variable parameters.
 | Parameter | Minimum | Maximum |
 |---|---:|---:|
-| M | 0 | 6 |
-| P | 2 | 6 |
-| T | 6 | 24 |
-| AoA ($ ^\circ$) | 0 | 8 |
+| $M$ | 0 | 6 |
+| $P$ | 2 | 6 |
+| $T$ | 6 | 24 |
+| $AoA$ ($^\circ$) | 0 | 8 |
 
-*For cambered airfoils ($M > 0$), $P$ ranges from 2 to 6. For symmetric airfoils ($M = 0$), $P = 0$ by NACA convention.*
+For cambered airfoils ($M > 0$), $P$ ranges from 2 to 6. For symmetric airfoils ($M = 0$), $P = 0$ by NACA convention.
 
 Subsequently, these 300 training configurations were fed into the automated CFD pipeline to obtain the corresponding aerodynamic coefficients. In Python, the values of the aerodynamic coefficients were extracted and combined with their corresponding $M$, $P$, $T$, and $AoA$ values to form the ML training dataset.
 
@@ -224,7 +235,7 @@ Using the selected configuration of Matérn 5/2 with ARD, the final GPR models f
 
 RMSE, MAE, and NLPD were evaluated in the symmetric and cambered domains for both $C_D$ and $C_L$, as shown in Table 7. The discrepancies between CFD results and model predictions are shown in Figure 5. The magnitudes of the GPR prediction RMSEs were comparable to or smaller than the CFD–experimental discrepancies observed during experimental validation. This indicates that the additional error introduced by the surrogate models is small relative to the discrepancies observed in the underlying CFD predictions.
 
-*Table 7. Performance of the final GPR models on the held-out test dataset.*
+Table 7. Performance of the final GPR models on the held-out test dataset.
 
 | Output | Symmetric RMSE | Cambered RMSE | Symmetric MAE | Cambered MAE | Symmetric NLPD | Cambered NLPD |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -233,7 +244,7 @@ RMSE, MAE, and NLPD were evaluated in the symmetric and cambered domains for bot
 
 ![GPR held-out test predictions](images/GPRTestPredictions.png)
 
-*Figure 5. GPR predictions against CFD results for the 50 held-out test cases for (a) $C_D$ and (b) $C_L$. The dashed line represents perfect agreement between the GPR prediction and CFD result.*
+Figure 5. GPR predictions against CFD results for the 50 held-out test cases for (a) $C_D$ and (b) $C_L$. The dashed line represents perfect agreement between the GPR prediction and CFD result.
 
 ## Design-Space Exploration
 
@@ -241,31 +252,35 @@ RMSE, MAE, and NLPD were evaluated in the symmetric and cambered domains for bot
 
 If $C_D$ and $C_L$ vary monotonically with $AoA$ within the design space, feasibility filtering can be notably more computationally efficient. Therefore, the monotonicity of the trained GPR predictions with respect to $AoA$ was assessed. Monotonicity was observed for both $C_D$ and $C_L$ at the six corner nodes of the geometric design space, as shown in Figure 6. As a result, it is assumed that $C_D$ and $C_L$ increase monotonically with respect to $AoA$ for all geometric configurations within the design space.
 
-![$C_D$ and $C_L$ against $AoA$](images/monotonicity.png)
+![Cd and Cl against AoA](images/monotonicity.png)
 
-*Figure 6. (a) $C_D$ and (b) $C_L$ against $AoA$ for extreme geometric configurations to assess monotonicity with respect to $AoA$.*
+Figure 6. (a) $C_D$ and (b) $C_L$ against $AoA$ for extreme geometric configurations to assess monotonicity with respect to $AoA$.
 
 ### Feasibility Evaluation
 
-During feasibility evaluation, the design space was discretised at 0.1 intervals for $M$, $P$, and $T$, with $AoA$ evaluated at $0.1 ^\circ$ intervals where an $AoA$ sweep is required. This corresponds to over 36 million design points across the full four-dimensional design space. The assumption that $C_D$ and $C_L$ increase monotonically with respect to $AoA$ notably reduces the computational cost of the filtering process.
+During feasibility evaluation, the design space was discretised at 0.1 intervals for $M$, $P$, and $T$, with $AoA$ evaluated at $0.1^\circ$ intervals where an $AoA$ sweep is required. This corresponds to over 36 million design points across the full four-dimensional design space. The assumption that $C_D$ and $C_L$ increase monotonically with respect to $AoA$ notably reduces the computational cost of the filtering process.
 
 There are two modes of feasibility evaluation: feasibility across an $AoA$ range and feasibility in an $AoA$ range. To assess the feasibility of a geometric configuration across a specified $AoA$ range given maximum $C_D$ and minimum $C_L$ constraints, the feasibility conditions become $C_D < C_{D,\max}$ at $AoA_{\max}$ and $C_L > C_{L,\min}$ at $AoA_{\min}$ under the monotonicity assumption. If both conditions are satisfied, the geometric configuration is assumed to satisfy the aerodynamic constraints throughout the specified $AoA$ range.
 
 To assess the feasibility of a geometric configuration in a specified $AoA$ range, the initial feasibility conditions become $C_D < C_{D,\max}$ at $AoA_{\min}$ and $C_L > C_{L,\min}$ at $AoA_{\max}$. Under the monotonicity assumption, geometric configurations that satisfy these conditions are retained as potentially feasible, since the endpoint checks cannot determine whether both aerodynamic constraints can be satisfied simultaneously at the same $AoA$. A secondary feasibility filtering was then required to identify the $AoA$ range over which each accepted geometric configuration satisfies both aerodynamic constraints. To achieve that, $AoA$ sweeps were performed for each accepted geometric configuration.
 
 Predictive uncertainty from the GPR models was incorporated into the feasibility criteria in order to reduce the likelihood of accepting false positives. For maximum $C_D$ and minimum $C_L$ constraints, the feasibility conditions become
-$$
+
+```math
 C_{D,\mathrm{mean}} + k\sigma_{C_D} < C_{D,\max},
-$$
+```
+
 and
-$$
+
+```math
 C_{L,\mathrm{mean}} - k\sigma_{C_L} > C_{L,\min},
-$$
+```
+
 where $\sigma$ is the predictive standard deviation and $k$ is the uncertainty multiplier. The default value for $k$ is 2. A larger $k$ leads to more conservative filtering as a larger uncertainty margin is required.
 
 ### Feasible Region Identification
 
-Feasible candidates were separated into symmetric and cambered configurations before clustering in the geometric design space was performed using Density-Based Spatial Clustering of Applications with Noise (DBSCAN). Clustering identifies isolated groups of feasible candidates that users can choose from. Before clustering, geometric parameters were normalised using their design-space ranges. The DBSCAN neighbourhood radius, $\epsilon$ (eps), was then selected based on the maximum Euclidean distance between adjacent candidates in the normalised geometric design space. For symmetric airfoils, clustering was performed in one dimension using $T$, while cambered airfoils were clustered in the three-dimensional $M$-$P$-$T$ space.
+Feasible candidates were separated into symmetric and cambered configurations before clustering in the geometric design space was performed using Density-Based Spatial Clustering of Applications with Noise (DBSCAN). Clustering identifies isolated groups of feasible candidates that users can choose from. Before clustering, geometric parameters were normalised using their design-space ranges. The DBSCAN neighbourhood radius, $\epsilon$ (eps), was then selected based on the maximum Euclidean distance between adjacent candidates in the normalised geometric design space. For symmetric airfoils, clustering was performed in one dimension using $T$, while cambered airfoils were clustered in the three-dimensional $M\text{-}P\text{-}T$ space.
 
 ### Design Selection and Local Sensitivity Analysis
 
@@ -273,15 +288,15 @@ Within the user-selected cluster, the configuration with the highest predicted l
 
 ## Example Design Study
 
-To demonstrate the design-space exploration workflow, an example design problem with constraints $C_D < 0.012$ and $C_L > 0.5$, and an operating $AoA$ of $4 ^\circ$ was investigated. The goal was to select candidates within the design space that satisfy the aerodynamic constraints across a specified $AoA$ range from $2 ^\circ$ to $6 ^\circ$, identify the geometric configuration with the highest predicted $L/D$ among the sampled candidates, allow users to progressively pin geometric parameters, and finally output the local aerodynamic performance and sensitivity metrics of the chosen configuration.
+To demonstrate the design-space exploration workflow, an example design problem with constraints $C_D < 0.012$ and $C_L > 0.5$, and an operating $AoA$ of $4^\circ$ was investigated. The goal was to select candidates within the design space that satisfy the aerodynamic constraints across a specified $AoA$ range from $2^\circ$ to $6^\circ$, identify the geometric configuration with the highest predicted $L/D$ among the sampled candidates, allow users to progressively pin geometric parameters, and finally output the local aerodynamic performance and sensitivity metrics of the chosen configuration.
 
-From the 445,441 sampled configurations using 0.1 intervals in the geometric design space, 70,840 feasible candidates were found to satisfy the aerodynamic constraints with uncertainty adjustments throughout the specified $AoA$ range ($2 ^\circ$ to $6 ^\circ$). All feasible candidates were identified to be in one cluster in the cambered region, while no symmetric configurations were found. Among the feasible candidates, the geometric configuration with the highest predicted $L/D$ at the operating $AoA$ ($4 ^\circ$) is $M = 6.0$, $P = 3.0$, and $T = 6.0$, producing $L/D = 107.42$. The parameter ranges within the cluster were evaluated to be $2.2 \leq M \leq 6.0$, $2.0 \leq P \leq 6.0$, and $6.0 \leq T \leq 16.0$.
+From the 445,441 sampled configurations using 0.1 intervals in the geometric design space, 70,840 feasible candidates were found to satisfy the aerodynamic constraints with uncertainty adjustments throughout the specified $AoA$ range ($2^\circ$ to $6^\circ$). All feasible candidates were identified to be in one cluster in the cambered region, while no symmetric configurations were found. Among the feasible candidates, the geometric configuration with the highest predicted $L/D$ at the operating $AoA$ ($4^\circ$) is $M = 6.0$, $P = 3.0$, and $T = 6.0$, producing $L/D = 107.42$. The parameter ranges within the cluster were evaluated to be $2.2 \leq M \leq 6.0$, $2.0 \leq P \leq 6.0$, and $6.0 \leq T \leq 16.0$.
 
 Using progressive pinning, the first selected parameter to pin was $M$ at 4.0. Then, $P$ was selected as the next parameter to pin, with an updated range of $2.0 \leq P \leq 5.9$. After pinning $P = 4.0$, the updated range of $T$ became $6.0 \leq T \leq 12.6$, which was pinned at 10.0. As a result, the user-selected geometric configuration is a NACA 4410.
 
 The aerodynamic performance of the configuration was calculated, predicting $C_D = 0.00984$, $C_L = 0.88$, and $L/D = 89.78$ at the operating $AoA$. The local sensitivity results are shown in Table 8.
 
-*Table 8. Local gradients of aerodynamic performance with respect to the input parameters at the selected configuration.*
+Table 8. Local gradients of aerodynamic performance with respect to the input parameters at the selected configuration.
 
 | Metric | $M$ | $P$ | $T$ | $AoA$ |
 | --- | ---: | ---: | ---: | ---: |
