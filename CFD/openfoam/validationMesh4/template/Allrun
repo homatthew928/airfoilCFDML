@@ -1,0 +1,109 @@
+#!/bin/sh
+
+set -e
+
+cd "${0%/*}" || exit 1
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions
+#------------------------------------------------------------------------------
+
+AoADeg="${1:?Usage: ./Allrun <AoA-degrees>}"
+UInf="52.0783"
+
+set -- $(python3 - "$AoADeg" "$UInf" <<'PY'
+import math
+import sys
+
+AoA = math.radians(float(sys.argv[1]))
+u = float(sys.argv[2])
+
+ux = u*math.cos(AoA)
+uy = u*math.sin(AoA)
+
+liftx  = -math.sin(AoA)
+lifty = math.cos(AoA)
+
+dragx = math.cos(AoA)
+dragy = math.sin(AoA)
+
+print (ux, uy, liftx, lifty, dragx, dragy)
+
+
+PY
+)
+
+ux="$1"
+uy="$2"
+liftx="$3"
+lifty="$4"
+dragx="$5"
+dragy="$6"
+
+projectDir="/path/to/airfoilCFDML"
+
+case "$AoADeg" in
+    -*)
+	caseName="n${AoADeg#-}"
+	;;
+    *)
+	caseName="${AoADeg}"
+	;;
+esac
+
+meshSource="${projectDir}/gmsh/validationMesh4/${caseName}/mesh.msh"
+
+meshDestination="constant/geometry/mesh.msh"
+
+cp "$meshSource" "$meshDestination"
+
+rm -rf constant/polyMesh
+
+runApplication -o  gmshToFoam "$meshDestination"
+
+runApplication -o changeDictionary -constant
+
+echo "========================================"
+echo "mesh complete"
+echo "========================================"
+
+rm -rf 0
+cp -r 0.orig 0
+
+foamDictionary 0/include/initialConditions \
+	       -entry flowVelocity \
+	       -set "(${ux} ${uy} 0)"
+
+foamDictionary system/controlDict \
+	       -entry functions.forceCoeffs.dragDir \
+	       -set "(${dragx} ${dragy} 0)"
+
+foamDictionary system/controlDict \
+	       -entry functions.forceCoeffs.liftDir \
+	       -set "(${liftx} ${lifty} 0)"
+
+runApplication -o checkMesh
+
+echo "========================================"
+grep -E \
+     "Mesh stats|cells:|Max aspect ratio|Mesh non-orthogonality|Max skewness|Failed|Mesh OK" \
+     log.checkMesh
+echo "========================================"
+
+runApplication -o decomposePar -force
+
+runParallel -o simpleFoam
+
+echo "========================================"
+echo "simpleFoam completed"
+echo "========================================"
+
+runApplication -o reconstructPar -latestTime
+
+rm -rf proc*
+
+runApplication -o -s yPlus simpleFoam -postProcess -func yPlus -latestTime
+
+echo "========================================"
+echo "yPlus"
+grep -F \
+     "patch airfoil y+" log.simpleFoam.yPlus
+echo "========================================"

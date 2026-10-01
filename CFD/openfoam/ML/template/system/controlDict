@@ -1,0 +1,131 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         20000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   200;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    forceCoeffs
+    {
+      type           forceCoeffs;
+      libs           ("libforces.so");
+
+      log            yes;
+
+      writeControl   timeStep;
+      writeInterval  1;
+
+      patches        (airfoil);
+
+      rho            rhoInf;
+      rhoInf         1;
+      magUInf        52.0783;
+
+      liftDir        (0 1 0);
+      dragDir        (1 0 0);
+      pitchAxis      (0 0 1);
+      CofR           (0.25 0 0);
+
+      lRef           1;
+      Aref           0.0001;
+
+    }
+
+    convergenceControl
+    {
+      type           runTimeControl;
+      libs           ("libutilityFunctionObjects.so");
+
+      timeStart      100;
+      nWriteStep     1;
+
+      conditions
+      {
+        CdConverged
+        {
+            type                average;
+            functionObject      forceCoeffs;
+            fields              (Cd);
+            tolerance           1e-6;
+            window              200;
+            windowType          exact;
+	    nIterStartUp        200;
+            groupID             1;
+        }
+
+        ClConverged
+        {
+            type                average;
+            functionObject      forceCoeffs;
+            fields              (Cl);
+            tolerance           1e-5;
+            window              200;
+            windowType          exact;
+	    nIterStartUp        200;
+            groupID             1;
+        }
+
+        UResidualConverged
+        {
+            type                equationInitialResidual;
+            fields              (U);
+            value               1e-4;
+            mode                minimum;
+            groupID             1;
+        }
+
+        pResidualConverged
+        {
+            type                equationInitialResidual;
+            fields              (p);
+            value               1e-4;
+            mode                minimum;
+            groupID             1;
+        }
+      }
+    }
+}
+
+
+// ************************************************************************* //

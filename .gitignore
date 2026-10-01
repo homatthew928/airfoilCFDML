@@ -1,0 +1,22 @@
+# Python virtual environment
+venv/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# Jupyter generated files
+.ipynb_checkpoints/
+
+# Generated Gmsh meshes
+gmsh/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary / backup files
+*.tmp
+*.bak
+*~

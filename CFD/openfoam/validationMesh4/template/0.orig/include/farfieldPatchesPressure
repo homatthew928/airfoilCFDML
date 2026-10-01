@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+inlet
+{
+    type            freestreamPressure;
+    freestreamValue $internalField;
+}
+outlet
+{
+    type            freestreamPressure;
+    freestreamValue $internalField;
+}
+bottom
+{
+    type            freestreamPressure;
+    freestreamValue $internalField;
+}
+top
+{
+    type            freestreamPressure;
+    freestreamValue $internalField;
+}
+
+// ************************************************************************* //
